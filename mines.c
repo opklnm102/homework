@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
 	f_id = 1;
 
 	if(argc == 1){  //콘솔입출력
+		printf("input n x m\n");
 		scanf("%d %d",&n,&m);
 		fflush(stdin);		
 
@@ -22,14 +23,13 @@ int main(int argc, char *argv[])
 				printf("ERROR : Can't allocate memory of %d x %d field.\n",n,m);
 				return -1;
 			}
+			row = (char *)malloc(sizeof(char) * (m+1));  //한줄입력을 위한 동적할당
+			if(row == NULL)
+				return -2;			
 
 			for(i=0; i<n; i++)  //field 초기화
 				for(j=0; j<m; j++)
-					mf[i*m+j] = '0';
-
-			row = (char *)malloc(sizeof(char) * (m+1));  //한줄입력을 위한 동적할당
-			if(row == NULL)
-				return -2;
+					mf[i*m+j] = '0';			
 
 			for(i=0; i<n; i++){  //지뢰값 입력
 				gets(row);  					
@@ -38,22 +38,23 @@ int main(int argc, char *argv[])
 						mf[i*m+j] = '*';		
 			}			
 
-			check(n,m,mf);  //지뢰찾기 함수 호출			
+			check(n,m,mf);  //지뢰찾기 함수 호출	
 
 			//지뢰값 출력
-			printf("Field #%d\n",f_id);
+			printf("\nField #%d\n",f_id);
 			for(i=0; i<n; i++){
 				for(j=0; j<m; j++)
 					printf("%c",mf[i*m+j]);
 				printf("\n");
 			}
 
+			printf("input n x m\n");
 			scanf("%d %d",&n,&m);  //다음 field를 할지 끝낼지
 			fflush(stdin);
 			if(n == 0 && m ==0)
 				break;
 			f_id++;
-			printf("\n");
+			
 		}//while loop 	
 	}//argc=1
 
@@ -74,18 +75,18 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 
-			for(i=0; i<n; i++)  //field 초기화
-				for(j=0; j<m; j++)
-					mf[i*m+j] = '0';
-
 			row = (char *)malloc(sizeof(char) * (m+1));  //한줄입력을 위한 동적할당
 			if(row == NULL)
-				return -2;
-			fseek(fp,2,SEEK_CUR);  //line feed와 carriage return 때문에 현재커서에서 2바이트씩 이동
+				return -2;		
+
+			for(i=0; i<n; i++)  //field 초기화
+				for(j=0; j<m; j++)
+					mf[i*m+j] = '0';				
 
 			for(i=0; i<n; i++){  //지뢰값 입력
-				fgets(row,m+1,fp);  
 				fseek(fp,2,SEEK_CUR);  //LF와 CR때문에 현재커서에서 2바이트씩 이동   <LF+CR=\n>
+				fgets(row,m+1,fp);  
+
 				for(j=0; j<m; j++)
 					if(row[j] == '*')	
 						mf[i*m+j] = '*';
@@ -109,70 +110,20 @@ int main(int argc, char *argv[])
 			printf("\n");
 		}//while loop 	
 	}//argc=2
+
+
 }//main
 
-//지뢰찾기 (*이 아닌 셀일때 주위에 *이 있으면 증가)
+//지뢰찾기 (*이 아닌 셀일때 주위 8개 셀에 *이 있으면 증가)
 void check(int n,int m,char *mf){
 	int i,j,i2,j2;
 	for(i=0; i<n; i++){
 		for(j=0; j<m; j++){
-			if(mf[i*m+j] != '*'){ 					
-				if(i == 0 && j == 0){  //왼쪽 아래 구석
-					for(i2=i; i2<i+2; i2++)  
-						for(j2=j; j2<j+2; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-				}
-				else if(i == n-1 && j == 0){  //왼쪽 위 구석
-					for(i2=i-1; i2<i+1; i2++)  
-						for(j2=j; j2<j+2; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-				}
-				else if(i == 0 && j == m-1){  //오른쪽 아래 구석
-
-					for(i2=i; i2<i+2; i2++)  
-						for(j2=j-1; j2<j+1; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-				}
-				else if(i == n-1 && j == m-1){  //오른쪽 위 구석
-					for(i2=i-1; i2<i+1; i2++)  
-						for(j2=j-1; j2<j+1; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-
-				}
-				else if(i == 0){  //맨 윗줄
-					for(i2=i; i2<i+2; i2++) 
+			if(mf[i*m+j] != '*'){ 
+				for(i2=i-1; i2<i+2; i2++)  
 						for(j2=j-1; j2<j+2; j2++)
-							if(mf[i2*m+j2] == '*')
+							if(mf[i2*m+j2] == '*' && (i2>-1 && j2>-1 && i2<n && j2<m) )
 								mf[i*m+j]++;
-				}
-				else if(i == n-1){  //맨 아랫줄
-					for(i2=i-1; i2<i+1; i2++)  
-						for(j2=j-1; j2<j+2; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-				}
-				else if(j == 0){  //맨 왼쪽줄
-					for(i2=i-1; i2<i+2; i2++)  
-						for(j2=j; j2<j+2; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-				}
-				else if(j == m-1){  //맨 오른쪽줄
-					for(i2=i-1; i2<i+2; i2++)  
-						for(j2=j-1; j2<j+1; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-				}
-				else{  //막힌데 없을 때
-					for(i2=i-1; i2<i+2; i2++)  
-						for(j2=j-1; j2<j+2; j2++)
-							if(mf[i2*m+j2] == '*')
-								mf[i*m+j]++;
-				}
 			}
 		}
 	}
