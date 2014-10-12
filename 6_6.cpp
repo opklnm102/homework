@@ -22,17 +22,32 @@ int* ArrayUtility2::concat(int s1[], int s2[], int size){
 }
 
 int* ArrayUtility2::remove(int s1[],int s2[], int size, int& retSize){
-	int *p = new int[size];
-	
-	for(int i=0; i<5; i++)
-		if(s1[i] == del_key)
+	int del_key;
+	retSize = size;
 
+	int *ap=ArrayUtility2::concat(s1,s2,size);  //10개의 배열이 생성됨
 
+	for(int i=0; i<5; i++){  //해당 값 배열 삭제 loop	 	
+		del_key=s2[i];
+		while(true){  //중복되는 값 때문에 삭제 loop를 2중으로
+			int count=0;
+			for(int j=0; j<retSize; j++)
+				if(ap[j] == del_key)
+					for(int k=j; k<retSize; k++){  //앞으로 땡겨준다  
+						ap[k] = ap [k+1];
+						retSize--;
+						count++;
+					}
+					if(count == 0) break;
+		}
+	}	
 
-
-
+	int *p = new int[retSize];
+	for(int i=0; i<retSize; i++)
+		p[i] = ap[i];
+	delete []ap;
+	return p;
 }
-
 
 int main()
 {
@@ -45,15 +60,19 @@ int main()
 	for(int i=0; i<5; i++)	cin >> y[i];
 
 	size=(sizeof(x)+sizeof(y))/sizeof(int);
-	cout << "합친 정수 배열을 출력한다" << endl;
-	ap=ArrayUtility2::concat(x,y,size);
+	ap=ArrayUtility2::concat(x,y,size);  //function call
+	cout << "합친 정수 배열을 출력한다" << endl;	
 
-	for(int i=0; i<10; i++)
+	for(int i=0; i<size; i++)
 		cout << ap[i] << ' ';
-
+	cout << endl;
 	delete []ap;
 
+	ap=ArrayUtility2::remove(x,y,size,retSize);  //function call
 	cout << "배열 x[]에서 y[]를 뺀 결과를 출력한다. 개수는 " << retSize << endl;
-	ap=ArrayUtility2::remove(x,y,size,retSize);
 
+	for(int i=0; i<retSize; i++)
+		cout << ap[i] << ' ';
+	cout << endl;
+	delete []ap;
 }
