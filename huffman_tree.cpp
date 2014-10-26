@@ -10,6 +10,7 @@
 typedef struct TreeNode{
 	char ch[5];  //문자
 	int weight;  //빈도수
+	char bit[20];  //비트
 	struct TreeNode *left_child;
 	struct TreeNode *right_child;
 }TreeNode;
@@ -28,6 +29,27 @@ TreeNode *make_tree(TreeNode *left,TreeNode *right);  //이진트리(노드) 생성
 void destory_tree(TreeNode *root);  //이진트리 파괴
 void insert_min_heap(HeapType *h,element item);  //히프에 삽입
 element delete_min_heap(HeapType *h);  //히프에서 삭제
+
+//중위순회
+void inorder(TreeNode *root){
+	if(root){
+		inorder(root->left_child);
+		printf("%s  ",root->ch);
+		inorder(root->right_child);
+	}
+}
+
+//중복일 경우 1리턴 아닐경우 0 리턴
+int duplication(HeapType *h, char ch[]){
+	int i;
+	for(i=1; i<=h->heap_size; i++){
+			if(strcmp(ch,h->heap[i].ptree->ch) == 0){  //중복 문자 check
+				printf("문자가 중복됨 저장 안하겠습니다\n");
+				return 1;
+			}
+		}
+	return 0;
+}
 
 int main()
 {
@@ -49,12 +71,19 @@ void huffman_tree(int size){
 	
 	for(i=0; i<size; i++){
 		printf("문자? "); scanf("%s",ch); fflush(stdin);
+		ch[1]='\0';  //문자가 아니라 문자열이 입력되면 첫번째 문자만 저장
 		printf("빈도수? "); scanf("%d",&weight);  fflush(stdin);
-		node = make_tree(NULL,NULL);
-		e.key = node->weight = weight;
-		strcpy(node->ch,ch);
-		e.ptree = node;
-		insert_min_heap(&h,e);
+		//중복 check(중복일 경우 값 저장 안한다)
+		if(duplication(&h, ch)){
+			i--;
+		}
+		else{
+			node = make_tree(NULL,NULL);
+			e.key = node->weight = weight;
+			strcpy(node->ch,ch);
+			e.ptree = node;
+			insert_min_heap(&h,e);
+		}
 	}
 	for(i=1; i<size; i++){
 		//최소값을 가지는 두개의 노드 삭제
@@ -83,6 +112,8 @@ void insert_min_heap(HeapType *h,element item){
 		i /= 2;
 	}
 	h->heap[i]=item;
+	inorder(h->heap[1].ptree);//중복 check
+	printf("\n");
 }
 
 //히프에서 삭제
@@ -124,6 +155,5 @@ void destory_tree(TreeNode *root){
 	destory_tree(root->right_child);
 	free(root);
 }
-
 
 
