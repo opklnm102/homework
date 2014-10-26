@@ -30,7 +30,27 @@ void insert_min_heap(HeapType *h,element item);  //히프에 삽입
 element delete_min_heap(HeapType *h);  //히프에서 삭제
 void inorder(TreeNode *root);  //중위순회
 int duplication(HeapType *h, char ch[]);  //문자 중복검사
-void insert_max_heap(HeapType *hh,element item);  //허프만트리 생성시 사용
+
+//허프만트리 생성시 사용
+void insert_huffman(TreeNode **root, char ch[], int weight, TreeNode *left, TreeNode *right){
+	TreeNode *node=(TreeNode*)malloc(sizeof(TreeNode));
+	if(node == NULL){
+		printf("메모리 에러\n");
+		exit(1);
+	}
+	strcpy(node->ch,ch);
+	node->weight = weight;
+	node->left_child = left;
+	node->right_child = right;
+
+
+
+}
+
+
+
+
+
 int main()
 {
 	int size;	
@@ -43,18 +63,18 @@ void huffman_tree(int size){
 	int i,c=0,weight;
 	char ch[5],num[4];	
 	TreeNode *node, *x;
+	TreeNode *root = NULL;
 	HeapType h;
-	HeapType hh;
 	element e,e1,e2;
 
 	h.heap=(element*)malloc(sizeof(element)*size);  //히프생성
-	hh.heap=(element*)malloc(sizeof(element)*(2*size-1));
+	//hh.heap=(element*)malloc(sizeof(element)*(2*size-1));
 	h.heap_size=0;  //히프 초기화
-	hh.heap_size=0;
+	//hh.heap_size=0;
 	for(i=0; i<size; i++)
 		h.heap[i].ptree=NULL;
-	for(i=0; i<(2*size); i++)
-		hh.heap[i].ptree=NULL;
+	/*for(i=0; i<(2*size); i++)
+		hh.heap[i].ptree=NULL;*/
 
 	//min_heap를 만드는 loop
 	for(i=0; i<size; i++){
@@ -83,11 +103,12 @@ void huffman_tree(int size){
 		//두개의 노드를 합친다.
 		x=make_tree(e1.ptree,e2.ptree);
 		e.key = x->weight = e1.key+e2.key;
-		strcpy(x->ch,"W-");
+		strcpy(x->ch,"W-");  //인터널노드에 문자(w-n)삽입
 		itoa(++c,num,10);
 		strcat(x->ch,num);			
-		e.ptree=x;
+		e.ptree=x;  
 		insert_min_heap(&h,e);
+		insert_huffman(&root,  x->ch, x->weight, x->left_child, x->right_child);	
 
 	}
 	e=delete_min_heap(&h);  //최종 root노드를 꺼내서(최소히프)
@@ -216,7 +237,6 @@ element delete_min_heap(HeapType *h){
 		else
 			h->heap[parent/2].ptree->right_child = h->heap[parent].ptree;
 	}
-	//h->heap[
 
 	free(tmp);
 	if(item.ptree->ch[1] == '\0'){  //허프만에서 단말노드들
@@ -266,3 +286,4 @@ int duplication(HeapType *h, char ch[]){
 	}
 	return 0;
 }
+
