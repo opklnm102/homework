@@ -23,34 +23,14 @@ typedef struct{
 	int heap_size;
 }HeapType;
 
-
 void huffman_tree(int size);  //허프만트리생성
 TreeNode *make_tree(TreeNode *left,TreeNode *right);  //이진트리(노드) 생성
 void destory_tree(TreeNode *root);  //이진트리 파괴
 void insert_min_heap(HeapType *h,element item);  //히프에 삽입
 element delete_min_heap(HeapType *h);  //히프에서 삭제
-
-//중위순회
-void inorder(TreeNode *root){
-	if(root){
-		inorder(root->left_child);
-		printf("%s  ",root->ch);
-		inorder(root->right_child);
-	}
-}
-
-//중복일 경우 1리턴 아닐경우 0 리턴
-int duplication(HeapType *h, char ch[]){
-	int i;
-	for(i=1; i<=h->heap_size; i++){
-			if(strcmp(ch,h->heap[i].ptree->ch) == 0){  //중복 문자 check
-				printf("문자가 중복됨 저장 안하겠습니다\n");
-				return 1;
-			}
-		}
-	return 0;
-}
-
+void inorder(TreeNode *root);  //중위순회
+int duplication(HeapType *h, char ch[]);  //문자 중복검사
+void insert_max_heap(HeapType *hh,element item);  //허프만트리 생성시 사용
 int main()
 {
 	int size;	
@@ -64,13 +44,18 @@ void huffman_tree(int size){
 	char ch[5],num[4];	
 	TreeNode *node, *x;
 	HeapType h;
+	HeapType hh;
 	element e,e1,e2;
-	
+
 	h.heap=(element*)malloc(sizeof(element)*size);  //히프생성
+	hh.heap=(element*)malloc(sizeof(element)*(2*size-1));
 	h.heap_size=0;  //히프 초기화
+	hh.heap_size=0;
 	for(i=0; i<size; i++)
 		h.heap[i].ptree=NULL;
-	
+	for(i=0; i<(2*size); i++)
+		hh.heap[i].ptree=NULL;
+
 	//min_heap를 만드는 loop
 	for(i=0; i<size; i++){
 		printf("문자? "); scanf("%s",ch); fflush(stdin);
@@ -86,12 +71,12 @@ void huffman_tree(int size){
 			strcpy(node->ch,ch);
 			e.ptree = node;
 			insert_min_heap(&h,e);
-			inorder(h.heap[1].ptree);//중위순회
+			inorder(h.heap[1].ptree);//중위순회			
 			printf("\n");
 		}
 	}
 	//huffman_tree를 만드는 loop
-	for(i=1; i<size; i++){
+	for(i=1; i<size; i++){		
 		//최소값을 가지는 두개의 노드 삭제
 		e1=delete_min_heap(&h);
 		e2=delete_min_heap(&h);
@@ -103,56 +88,141 @@ void huffman_tree(int size){
 		strcat(x->ch,num);			
 		e.ptree=x;
 		insert_min_heap(&h,e);
+
 	}
-	e=delete_min_heap(&h);
-	destory_tree(e.ptree);
+	e=delete_min_heap(&h);  //최종 root노드를 꺼내서(최소히프)
+	destory_tree(e.ptree);  //트리 삭제(최소히프)
+
+	//free(h.heap);
+	
 }
 
 //히프에서 삽입
 void insert_min_heap(HeapType *h,element item){
-	int i;
+	int i,j;
 	i=++(h->heap_size);  //1부터 넣기 위해 전위증가
+	TreeNode *tmp = (TreeNode*)malloc(sizeof(TreeNode));
 
-	while((i != 1) && (item.key < h->heap[i/2].key)){  //key가 부모노드보다 작을경우 바꾼다.(루트로 올라간다)
-		h->heap[i]=h->heap[i/2];
-		i /= 2;
-		if(h->heap[i].ptree->left_child == NULL)
-			h->heap[i].ptree->left_child = h->heap[i*2].ptree;
-		else if(h->heap[i].ptree->right_child == NULL)
-			h->heap[i/2].ptree->right_child = h->heap[i*2+1].ptree;
+	if((i != 1) && (item.key < h->heap[i/2].key)){
+		while((i != 1) && (item.key < h->heap[i/2].key)){  //key가 부모노드보다 작을경우 바꾼다.(루트로 올라간다)
+			h->heap[i]=h->heap[i/2];  //[i]는 자식노드 [i/2]는 부모노드
+
+			if(i%2 == 0){  //짝수(즉 왼쪽자식) ptree는 노드를 가리킨다
+				tmp->left_child = item.ptree->left_child;
+				tmp->right_child = item.ptree->right_child;
+				item.ptree->left_child = h->heap[i/2].ptree;
+				item.ptree->right_child = h->heap[i/2].ptree->right_child;
+				h->heap[i/2].ptree->left_child = tmp->left_child;
+				h->heap[i/2].ptree->right_child = tmp->right_child;
+				j=i/2;
+				if(j/2 >= 1){
+					if(j%2 == 0)
+						h->heap[j/2].ptree->left_child = item.ptree;
+					else
+						h->heap[j/2].ptree->right_child = item.ptree;
+				}
+			}
+			else{  //홀수(즉 오른쪽자식)
+				tmp->left_child = item.ptree->left_child;
+				tmp->right_child = item.ptree->right_child;
+				item.ptree->left_child = h->heap[i/2].ptree->left_child;
+				item.ptree->right_child =h->heap[i/2].ptree;
+				h->heap[i/2].ptree->left_child = tmp->left_child;
+				h->heap[i/2].ptree->right_child = tmp->right_child;
+				j=i/2;
+				if(j/2 >= 1){
+					if(j%2 == 0)
+						h->heap[j/2].ptree->left_child = item.ptree;
+					else
+						h->heap[j/2].ptree->right_child = item.ptree;
+				}
+			}
+			i /= 2;		
+		}
+	}
+	else if((i != 1) && (item.key >= h->heap[i/2].key)){  //재배치 안됬을경우
+		if(i%2 == 0)  //짝수(즉 왼쪽자식) ptree는 노드를 가리킨다			
+			h->heap[i/2].ptree->left_child = item.ptree;		
+		else  //홀수(즉 오른쪽자식)
+			h->heap[i/2].ptree->right_child = item.ptree;
 	}
 	h->heap[i]=item;
-	if(item.key < h->heap[i*2].key){  //재배치가 이루어졌다면
-		if(h->heap[i].ptree->left_child == NULL)
-			h->heap[i].ptree->left_child = h->heap[i*2].ptree;
-		else if(h->heap[i].ptree->right_child == NULL)
-			h->heap[i/2].ptree->right_child = h->heap[i*2+1].ptree;
-	}
-	else{
-
-	}
-
-		
-		
+	free(tmp);
 }
 
 //히프에서 삭제
 element delete_min_heap(HeapType *h){
-	int parent,child;
+	int parent,child,j;
 	element item,temp;
+	TreeNode *tmp = (TreeNode*)malloc(sizeof(TreeNode));
+
 	item=h->heap[1];  //루트 넣고
 	temp=h->heap[(h->heap_size)--];  //마지막 노드 넣고 size감소
+	if(h->heap_size >= 1){
+		if((h->heap_size+1)%2 == 0)  //마지막 노드와 부모와의 연결을 끊어준다.
+			h->heap[(h->heap_size+1)/2].ptree->left_child =NULL;
+		else
+			h->heap[(h->heap_size+1)/2].ptree->right_child =NULL;
+	}
 	parent=1;
 	child=2;
-	while(child <= h->heap_size){
-		if((child<h->heap_size) && (h->heap[child].key > h->heap[child+1].key))
-			child++;
-		if(temp.key >= h->heap[child].key) break;  //재배치 종료
-		h->heap[parent] = h->heap[child];
+
+	while(child <= h->heap_size){  //마지막노드를 만날때까지
+		if((child<h->heap_size) && (h->heap[child].key > h->heap[child+1].key)) 
+			child++;    	//왼쪽의 키값이 클경우 child가 오른쪽 노드를 가리키게
+		if(temp.key <= h->heap[child].key) break;  //재배치 종료		
+		j=parent/2;
+
+		if(child%2 == 0){  //짝수(즉 왼쪽자식) ptree는 노드를 가리킨다
+			tmp->left_child = h->heap[child].ptree->left_child ;
+			tmp->right_child = h->heap[child].ptree->right_child;
+			h->heap[child].ptree->left_child = h->heap[parent].ptree;
+			h->heap[child].ptree->right_child = h->heap[parent].ptree->right_child;
+			h->heap[parent].ptree->left_child = tmp->left_child;
+			h->heap[parent].ptree->right_child = tmp->right_child;
+			if(j/2 >= 1){
+				if(j%2 == 0)
+					h->heap[j/2].ptree->left_child = h->heap[child].ptree;
+				else
+					h->heap[j/2].ptree->right_child = h->heap[child].ptree;
+			}
+		}
+		else{  //홀수(즉 오른쪽자식)
+			tmp->left_child = h->heap[child].ptree->left_child ;
+			tmp->right_child = h->heap[child].ptree->right_child;
+			h->heap[child].ptree->left_child = h->heap[parent].ptree->left_child;
+			h->heap[child].ptree->right_child = h->heap[parent].ptree;
+			h->heap[parent].ptree->left_child = tmp->left_child;
+			h->heap[parent].ptree->right_child = tmp->right_child;
+			if(j/2 >= 1){
+				if(j%2 == 0)
+					h->heap[j/2].ptree->left_child = h->heap[child].ptree;
+				else
+					h->heap[j/2].ptree->right_child = h->heap[child].ptree;
+			}
+		}		
+		h->heap[parent] = h->heap[child];  //자식을 부모로 올린다.
 		parent = child;
 		child *= 2;
 	}
+	if(temp.ptree->ch[1] == '\0'){
+		temp.ptree->left_child = h->heap[parent].ptree->left_child;
+		temp.ptree->right_child = h->heap[parent].ptree->right_child;
+	}
 	h->heap[parent] = temp;
+	if(parent/2 >= 1){
+		if(parent%2 ==0)
+			h->heap[parent/2].ptree->left_child = h->heap[parent].ptree;
+		else
+			h->heap[parent/2].ptree->right_child = h->heap[parent].ptree;
+	}
+	//h->heap[
+
+	free(tmp);
+	if(item.ptree->ch[1] == '\0'){  //허프만에서 단말노드들
+		item.ptree->left_child = NULL;
+		item.ptree->right_child = NULL;
+	}
 	return item;
 }
 
@@ -176,4 +246,23 @@ void destory_tree(TreeNode *root){
 	free(root);
 }
 
+//중위순회
+void inorder(TreeNode *root){
+	if(root){
+		inorder(root->left_child);
+		printf("%s  ",root->ch);
+		inorder(root->right_child);
+	}
+}
 
+//중복일 경우 1리턴 아닐경우 0 리턴
+int duplication(HeapType *h, char ch[]){
+	int i;
+	for(i=1; i<=h->heap_size; i++){
+		if(strcmp(ch,h->heap[i].ptree->ch) == 0){  //중복 문자 check
+			printf("문자가 중복됨 저장 안하겠습니다\n");
+			return 1;
+		}
+	}
+	return 0;
+}
