@@ -30,26 +30,8 @@ void insert_min_heap(HeapType *h,element item);  //히프에 삽입
 element delete_min_heap(HeapType *h);  //히프에서 삭제
 void inorder(TreeNode *root);  //중위순회
 int duplication(HeapType *h, char ch[]);  //문자 중복검사
-
-//허프만트리 생성시 사용
-void insert_huffman(TreeNode **root, char ch[], int weight, TreeNode *left, TreeNode *right){
-	TreeNode *node=(TreeNode*)malloc(sizeof(TreeNode));
-	if(node == NULL){
-		printf("메모리 에러\n");
-		exit(1);
-	}
-	strcpy(node->ch,ch);
-	node->weight = weight;
-	node->left_child = left;
-	node->right_child = right;
-
-
-
-}
-
-
-
-
+//허프만 트리에 삽입
+void insert_huffman(TreeNode **root, char ch[], int weight, TreeNode *left, TreeNode *right);
 
 int main()
 {
@@ -67,14 +49,10 @@ void huffman_tree(int size){
 	HeapType h;
 	element e,e1,e2;
 
-	h.heap=(element*)malloc(sizeof(element)*size);  //히프생성
-	//hh.heap=(element*)malloc(sizeof(element)*(2*size-1));
-	h.heap_size=0;  //히프 초기화
-	//hh.heap_size=0;
+	h.heap=(element*)malloc(sizeof(element)*size);  //히프생성	
+	h.heap_size=0;  //히프 초기화	
 	for(i=0; i<size; i++)
 		h.heap[i].ptree=NULL;
-	/*for(i=0; i<(2*size); i++)
-		hh.heap[i].ptree=NULL;*/
 
 	//min_heap를 만드는 loop
 	for(i=0; i<size; i++){
@@ -107,15 +85,17 @@ void huffman_tree(int size){
 		itoa(++c,num,10);
 		strcat(x->ch,num);			
 		e.ptree=x;  
-		insert_min_heap(&h,e);
 		insert_huffman(&root,  x->ch, x->weight, x->left_child, x->right_child);	
-
+		inorder(root);  //허프만트리만들면서 중위순회
+		printf("\n");
+		e.ptree->left_child = e.ptree->right_child = NULL;
+		insert_min_heap(&h,e);
 	}
+
+	
 	e=delete_min_heap(&h);  //최종 root노드를 꺼내서(최소히프)
 	destory_tree(e.ptree);  //트리 삭제(최소히프)
-
-	//free(h.heap);
-	
+	destory_tree(root);
 }
 
 //히프에서 삽입
@@ -285,5 +265,30 @@ int duplication(HeapType *h, char ch[]){
 		}
 	}
 	return 0;
+}
+
+//허프만 트리에 삽입
+void insert_huffman(TreeNode **root, char ch[], int weight, TreeNode *left, TreeNode *right){
+	TreeNode *t=*root;
+	TreeNode *node=(TreeNode*)malloc(sizeof(TreeNode));
+	if(node == NULL){
+		printf("메모리 에러\n");
+		exit(1);
+	}
+	strcpy(node->ch,ch);
+	node->weight = weight;
+	node->left_child = left;
+	node->right_child = right;
+
+	if(t == NULL){  //빈트리면
+		*root=node;
+	}
+	else{
+		if(t->weight == node->left_child->weight)
+			node->left_child = t;
+		else if(t->weight == node->right_child->weight)
+			node->right_child= t;
+		*root=node;
+	}
 }
 
