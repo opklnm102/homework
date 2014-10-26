@@ -68,7 +68,10 @@ void huffman_tree(int size){
 	
 	h.heap=(element*)malloc(sizeof(element)*size);  //히프생성
 	h.heap_size=0;  //히프 초기화
+	for(i=0; i<size; i++)
+		h.heap[i].ptree=NULL;
 	
+	//min_heap를 만드는 loop
 	for(i=0; i<size; i++){
 		printf("문자? "); scanf("%s",ch); fflush(stdin);
 		ch[1]='\0';  //문자가 아니라 문자열이 입력되면 첫번째 문자만 저장
@@ -83,8 +86,11 @@ void huffman_tree(int size){
 			strcpy(node->ch,ch);
 			e.ptree = node;
 			insert_min_heap(&h,e);
+			inorder(h.heap[1].ptree);//중위순회
+			printf("\n");
 		}
 	}
+	//huffman_tree를 만드는 loop
 	for(i=1; i<size; i++){
 		//최소값을 가지는 두개의 노드 삭제
 		e1=delete_min_heap(&h);
@@ -107,13 +113,27 @@ void insert_min_heap(HeapType *h,element item){
 	int i;
 	i=++(h->heap_size);  //1부터 넣기 위해 전위증가
 
-	while((i != 1) && (item.key < h->heap[i/2].key)){
+	while((i != 1) && (item.key < h->heap[i/2].key)){  //key가 부모노드보다 작을경우 바꾼다.(루트로 올라간다)
 		h->heap[i]=h->heap[i/2];
 		i /= 2;
+		if(h->heap[i].ptree->left_child == NULL)
+			h->heap[i].ptree->left_child = h->heap[i*2].ptree;
+		else if(h->heap[i].ptree->right_child == NULL)
+			h->heap[i/2].ptree->right_child = h->heap[i*2+1].ptree;
 	}
 	h->heap[i]=item;
-	inorder(h->heap[1].ptree);//중복 check
-	printf("\n");
+	if(item.key < h->heap[i*2].key){  //재배치가 이루어졌다면
+		if(h->heap[i].ptree->left_child == NULL)
+			h->heap[i].ptree->left_child = h->heap[i*2].ptree;
+		else if(h->heap[i].ptree->right_child == NULL)
+			h->heap[i/2].ptree->right_child = h->heap[i*2+1].ptree;
+	}
+	else{
+
+	}
+
+		
+		
 }
 
 //히프에서 삭제
